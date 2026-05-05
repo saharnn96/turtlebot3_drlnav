@@ -72,11 +72,11 @@ Turtlebot3Fake::~Turtlebot3Fake()
 void Turtlebot3Fake::init_parameters()
 {
   // Declare parameters that may be set on this node
-  this->declare_parameter("joint_states_frame");
-  this->declare_parameter("odom_frame");
-  this->declare_parameter("base_frame");
-  this->declare_parameter("wheels.separation");
-  this->declare_parameter("wheels.radius");
+  this->declare_parameter("joint_states_frame", std::string("base_footprint"));
+  this->declare_parameter("odom_frame", std::string("odom"));
+  this->declare_parameter("base_frame", std::string("base_footprint"));
+  this->declare_parameter("wheels.separation", 0.0);
+  this->declare_parameter("wheels.radius", 0.0);
 
   // Get parameters from yaml
   this->get_parameter_or<std::string>(

@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.3.1-base-ubuntu20.04
+FROM nvidia/cuda:12.1.1-base-ubuntu22.04
 
 WORKDIR /home
 
@@ -11,32 +11,24 @@ RUN echo 'Etc/UTC' > /etc/timezone && \
 
 # --- PYTHON3 INSTALLATION ---
 
-# Install Python 3.8
+# Python 3.10 ships by default on Ubuntu 22.04 — no extra install needed
+RUN apt-get update && apt-get install -y python3-pip python3-tk
 
-RUN apt-get update && apt-get install -y software-properties-common
-RUN add-apt-repository ppa:deadsnakes/ppa
-RUN apt-get update && apt-get install -y python3.8
-
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1
-
-# Install pytorch
-
-RUN apt-get install -y python3-pip
-
+# Install pytorch (cu121 matches the CUDA 12.1 base image)
 RUN pip3 install \
-    numpy==1.24.3 \
-    matplotlib==3.7.1 \
-    pandas==2.0.2 \
-    pyqtgraph==0.12.4 \
-    PyQt5==5.14.1 \
-    torch==1.10.0+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
+    numpy==1.26.4 \
+    matplotlib==3.8.4 \
+    pandas==2.2.2 \
+    pyqtgraph==0.13.7 \
+    PyQt5==5.15.10 \
+    torch==2.1.2+cu121 -f https://download.pytorch.org/whl/cu121/torch_stable.html
 
 # --- GAZEBO INSTALLATION ---
 
-RUN apt-get update && apt-get install -y wget
+RUN apt-get update && apt-get install -y wget curl
 
-# install Gazebo
-RUN curl -sSL http://get.gazebosim.org | sh
+# Install Gazebo Classic (11) via apt — available for Ubuntu 22.04 / Humble
+RUN apt-get update && apt-get install -y gazebo
 
 # Download basic gazebo models manually instead of complete (slow) download
 ENV GAZEBO_MODEL_DATABASE_URI ""
@@ -47,7 +39,7 @@ RUN wget https://raw.githubusercontent.com/osrf/gazebo_models/master/ground_plan
 RUN wget https://raw.githubusercontent.com/osrf/gazebo_models/master/sun/model.sdf -P ./sun
 RUN wget https://raw.githubusercontent.com/osrf/gazebo_models/master/sun/model.config -P ./sun
 
-# --- ROS2 FOXY INSTALLATION ---
+# --- ROS2 HUMBLE INSTALLATION ---
 
 # Set locale
 RUN apt-get update && apt-get install -y locales
@@ -62,12 +54,12 @@ RUN add-apt-repository universe
 RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
 
-# Install ROS 2 packages
-RUN apt-get update && apt-get install -y ros-foxy-ros-base python3-argcomplete
+# Install ROS 2 Humble packages
+RUN apt-get update && apt-get install -y ros-humble-ros-base python3-argcomplete
 
-RUN apt-get update && apt-get install -y python3-rosdep2 python3-tk
+RUN apt-get update && apt-get install -y python3-rosdep2
 
-RUN apt-get install -y ros-foxy-turtlebot3-description ros-foxy-gazebo-ros-pkgs
+RUN apt-get install -y ros-humble-turtlebot3-description ros-humble-gazebo-ros-pkgs
 
 RUN apt-get update && apt-get install -y ros-dev-tools
 
@@ -80,7 +72,7 @@ RUN apt-get install -y nano tmux
 # Set up ~/.bashrc file
 RUN echo \
     "\n"\
-    "source /opt/ros/foxy/setup.bash\n"\
+    "source /opt/ros/humble/setup.bash\n"\
     "# ROS2 domain id for network communication, machines with the same ID will receive each others' messages\n"\
     "export ROS_DOMAIN_ID=1\n"\
     "export DRLNAV_BASE_PATH='/home/turtlebot3_drlnav'\n"\

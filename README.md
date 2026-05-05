@@ -78,7 +78,7 @@ sudo systemctl restart docker
 
 At this point, a working setup can be tested by running a base CUDA container:
 ```
-sudo docker run --rm --runtime=nvidia --gpus all nvidia/cuda:11.6.2-base-ubuntu20.04 nvidia-smi
+sudo docker run --rm --runtime=nvidia --gpus all nvidia/cuda:12.1.1-base-ubuntu22.04 nvidia-smi
 ```
 ## **Build and run container**
 
@@ -94,10 +94,9 @@ Lastly, we need to give our docker container permission to run GUIs:
 xhost +local:docker
 ```
 
-Now that everything is set up, start the container: <br>
-(Replace `/PATH/TO/REPO` with the path where you downloaded this repository on your machine)
+Now that everything is set up, start the container from inside the repository directory:
 ```
-docker run -it --gpus all --privileged   --env NVIDIA_VISIBLE_DEVICES=all   --env NVIDIA_DRIVER_CAPABILITIES=all  --env DISPLAY=${DISPLAY}  --env QT_X11_NO_MITSHM=1  --volume /tmp/.X11-unix:/tmp/.X11-unix -v /PATH/TO/REPO/turtlebot3_drlnav:/home/turtlebot3_drlnav   --network host turtlebot3_drlnav
+docker run -it --gpus all --privileged --env NVIDIA_VISIBLE_DEVICES=all --env NVIDIA_DRIVER_CAPABILITIES=all --env DISPLAY=${DISPLAY} --env QT_X11_NO_MITSHM=1 --volume /tmp/.X11-unix:/tmp/.X11-unix -v $(pwd):/home/turtlebot3_drlnav --network host turtlebot3_drlnav
 ```
 And that's it! we don't need to install any other dependencies thanks to docker.
 
@@ -118,69 +117,66 @@ If you don't want to use docker you can install all dependencies manually.
 
 ## **Dependencies**
 
-*   Ubuntu 20.04 LTS (Focal Fossa) [download](https://releases.ubuntu.com/20.04)
-*   ROS2 Foxy Fitzroy
-*   Gazebo (Version 11.0)
-*   PyTorch (Version: 1.10.0)
+*   Ubuntu 22.04 LTS (Jammy Jellyfish) [download](https://releases.ubuntu.com/22.04)
+*   ROS2 Humble Hawksbill
+*   Gazebo Classic (Version 11)
+*   PyTorch (Version: 2.1.2)
 
 
 ## **Installing ROS2**
-Install ROS2 foxy according to the following guide: [link](https://docs.ros.org/en/foxy/Installation/Ubuntu-Install-Debians.html). You can choose either the Desktop or Bare Bones ROS installation, both work. <br>
+Install ROS2 Humble according to the official guide: [link](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html). You can choose either the Desktop or Bare Bones ROS installation, both work. <br>
 To prevent having to manually source the setup script every time, add the following line at the end of your `~/.bashrc` file:
 
 ```
-source /opt/ros/foxy/setup.bash
+source /opt/ros/humble/setup.bash
 ```
-
-More detailed installation instructions can be found [here](https://automaticaddison.com/how-to-install-ros-2-foxy-fitzroy-on-ubuntu-linux/).
 
 
 ## **Installing Gazebo**
 
-For this project we will be using Gazebo **11.0.** To install Gazebo 11.0, navigate to the following [page](http://gazebosim.org/tutorials?tut=install_ubuntu), select Version 11.0 in the top-right corner and follow the default installation instructions.
+For this project we will be using **Gazebo Classic 11**, which is available as a native Ubuntu 22.04 package.
 
-Next, we need to install a package that allows ROS2 to interface with Gazebo.
-To install this package we simply execute the following command in a terminal:
+Install Gazebo and its ROS2 Humble bridge:
 ```
-sudo apt install ros-foxy-gazebo-ros-pkgs
+sudo apt install gazebo ros-humble-gazebo-ros-pkgs
 ```
 After successful installation we are now going to test our ROS2 + Gazebo setup by making a demo model move in the simulator. First, install two additional packages for demo purposes (they might already be installed):
 ```
-sudo apt install ros-foxy-ros-core ros-foxy-geometry2
+sudo apt install ros-humble-ros-core ros-humble-geometry2
 ```
 Source ROS2 before we launch the demo:
 ```
-source /opt/ros/foxy/setup.bash
+source /opt/ros/humble/setup.bash
 ```
 
 Now, let's load the demo model in gazebo:
 ```
-gazebo --verbose /opt/ros/foxy/share/gazebo_plugins/worlds/gazebo_ros_diff_drive_demo.world
+gazebo --verbose /opt/ros/humble/share/gazebo_plugins/worlds/gazebo_ros_diff_drive_demo.world
 ```
 This should launch the Gazebo GUI with a simple vehicle model. Open a second terminal and provide the following command to make the vehicle move:
 ```
 ros2 topic pub /demo/cmd_demo geometry_msgs/Twist '{linear: {x: 1.0}}' -1
 ```
 If the vehicle starts moving forward we confirmed that the Gazebo-ROS connection works.
-If something does not work, carefully check whether you executed all the commands and sourced ROS2 (`source /opt/ros/foxy/setup.bash`). You can also check the more detailed [guide](https://automaticaddison.com/how-to-install-ros-2-foxy-fitzroy-on-ubuntu-linux/).
+If something does not work, carefully check whether you executed all the commands and sourced ROS2 (`source /opt/ros/humble/setup.bash`).
 
 ## **Installing Python3, Pytorch**
 
-If you are using Ubuntu 20.04 as specified, Python should already be preinstalled. The last tested version for this project was Python 3.8.10
+Ubuntu 22.04 ships with Python 3.10 by default — no extra installation needed.
 
 Install pip3 (python package manager for python 3) as follows:
 ```
 sudo apt install python3-pip
 ```
 
-To install the tested version of PyTorch (1.10.0) with CUDA support (11.3) and packages for generating graphs, run:
+To install PyTorch (2.1.2) with CUDA 12.1 support and packages for generating graphs, run:
 ```
-pip3 install matplotlib pandas pyqtgraph==0.12.4 PyQt5==5.14.1 torch==1.10.0+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
+pip3 install numpy==1.26.4 matplotlib==3.8.4 pandas==2.2.2 pyqtgraph==0.13.7 PyQt5==5.15.10 torch==2.1.2+cu121 -f https://download.pytorch.org/whl/cu121/torch_stable.html
 ```
 
-`pyqtgraph` and `PyQt` are optional and only necessary if you want to visualize the neural network activity. `pandas` is only required for generating graphs outside of training.
+`pyqtgraph` and `PyQt5` are optional and only necessary if you want to visualize the neural network activity. `pandas` is only required for generating graphs outside of training.
 
-**Note: The version of CUDA support to install will depend on the [compute capability](https://developer.nvidia.com/cuda-gpus) of your GPU**
+**Note: The version of CUDA support to install will depend on the [compute capability](https://developer.nvidia.com/cuda-gpus) of your GPU. For CUDA 11.8 use `torch==2.1.2+cu118` and the `cu118` index URL instead.**
 
 ## **Enabling GPU support (recommended)**
 
@@ -205,18 +201,16 @@ and
 nvidia-smi
 ```
 Which should display version numbers and GPU information.
-In case of doubt, consult one of the following resources: [one](https://varhowto.com/install-pytorch-ubuntu-20-04/), [two](https://pytorch.org/get-started/locally/), [three](https://docs.nvidia.com/deploy/cuda-compatibility/index.html)
+In case of doubt, consult one of the following resources: [PyTorch get started](https://pytorch.org/get-started/locally/), [CUDA compatibility](https://docs.nvidia.com/deploy/cuda-compatibility/index.html)
 
 ## **Downloading the code base and building**
-<!-- Now it's time to create a workspace that will serve as the basis for our project. To do this, follow the tutorial [here](https://automaticaddison.com/how-to-create-a-workspace-ros-2-foxy-fitzroy/) -->
-
 Now it's time to download the repository to the actual code.
 
 Since ROS2 does not yet support metapackages, we will have to download the whole workspace from Git.
 
 First, make sure you have the `turtlebot3-description` package by running:
 ```
-sudo apt-get install ros-foxy-turtlebot3-description
+sudo apt-get install ros-humble-turtlebot3-description
 ```
 
 Open a terminal in the desired location for the new workspace. Clone the repository using:
@@ -242,7 +236,7 @@ rosdep update
 
 Now we can use rosdep to install all ROS packages needed by our repository
 ```
-rosdep install -i --from-path src --rosdistro foxy -y
+rosdep install -i --from-path src --rosdistro humble -y
 ```
 
 Now that we have all of the packages in place it is time to build the repository. First update your package list
@@ -264,8 +258,10 @@ After colcon has finished building source the repository
 source install/setup.bash
 ```
 
-The last thing we need to do before running the code is add a few lines to our `~/.bashrc` file so that they are automatically executed whenever we open a new terminal. Add the following lines at the end of your `~/.bashrc` file and **replace ~/path/to/turtlebot3_drlnav/repo with the path where you cloned the repository. (e.g. ~/turtlebot3_drlnav)**
+The last thing we need to do before running the code is add a few lines to our `~/.bashrc` file so that they are automatically executed whenever we open a new terminal. Add the following lines at the end of your `~/.bashrc` file and **replace ~/path/to/turtlebot3_drlnav with the path where you cloned the repository. (e.g. ~/turtlebot3_drlnav)**
 ```
+source /opt/ros/humble/setup.bash
+
 # ROS2 domain id for network communication, machines with the same ID will receive each others' messages
 export ROS_DOMAIN_ID=1
 
@@ -286,7 +282,7 @@ export TURTLEBOT3_MODEL=burger
 export GAZEBO_PLUGIN_PATH=$GAZEBO_PLUGIN_PATH:$WORKSPACE_DIR/src/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_drl_world/obstacle_plugin/lib
 ```
 
-For more detailed instructions on ros workspaces check [this guide](https://automaticaddison.com/how-to-create-a-workspace-ros-2-foxy-fitzroy/).
+For more detailed instructions on ROS2 workspaces check [this guide](https://docs.ros.org/en/humble/Tutorials/Beginner-Client-Libraries/Creating-A-Workspace/Creating-A-Workspace.html).
 
 **Note: Always make sure to first run ```source install/setup.bash``` or open a fresh terminal after building with `colcon build`.**
 
@@ -386,12 +382,12 @@ ros2 run turtlebot3_drl environment
 Terminal 4:
 For DDPG:
 ```
-ros2 run turtlebot3_drl test_agent ddpg 'examples/ddpg_0' 8000
+ros2 run turtlebot3_drl test_agent ddpg 'examples/ddpg_0_stage9' 8000
 ```
 
 Or, for TD3
 ```
-ros2 run turtlebot3_drl test_agent td3 'examples/td3_0' 7400
+ros2 run turtlebot3_drl test_agent td3 'examples/td3_0_stage9' 7400
 ```
 
 You should then see the example model navigate successfully toward the goal
@@ -535,14 +531,14 @@ If everything loads correctly, you can now use the included script to generate a
 
 # **Troubleshooting**
 
-## **bash: /opt/ros/foxy/setup.bash: No such file or directory**
+## **bash: /opt/ros/humble/setup.bash: No such file or directory**
 
-Depending on your installation method of ROS, it might be required to add the following line to your `~/bashrc` file:
+Make sure ROS2 Humble is installed correctly. Follow the official guide: [ROS2 Humble installation](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html).
+Also make sure that you source the correct setup files in your `~/.bashrc` as described in the installation section of this guide:
 ```
-source ~/ros2_foxy/ros2-linux/setup.bash
+source /opt/ros/humble/setup.bash
 ```
-Also, make sure that you source the correct setup files in your `~/.bashrc` as described in the installation section of this guide.
 
-## **Package 'turtlebot3_gazebo' not found: "package 'turtlebot3_gazebo' not found, searching: ['/opt/ros/foxy']"**
+## **Package 'turtlebot3_gazebo' not found: "package 'turtlebot3_gazebo' not found, searching: ['/opt/ros/humble']"**
 
-Make sure to run `source install/setup.bash` from the root of the repository in every terminal every time after you build the project using `colcon_build`. Otherwise, the nodes will not run the updated version of your code but the old version from the last time you built and sourced.
+Make sure to run `source install/setup.bash` from the root of the repository in every terminal every time after you build the project using `colcon build`. Otherwise, the nodes will not run the updated version of your code but the old version from the last time you built and sourced.

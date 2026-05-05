@@ -45,7 +45,7 @@ class DRLGazebo(Node):
         ************************************************************"""
 
         self.entity_dir_path = (os.path.dirname(os.path.realpath(__file__))).replace(
-            'turtlebot3_drl/lib/python3.8/site-packages/turtlebot3_drl/drl_gazebo',
+            'turtlebot3_drl/lib/python3.10/site-packages/turtlebot3_drl/drl_gazebo',
             'turtlebot3_gazebo/share/turtlebot3_gazebo/models/turtlebot3_drl_world/goal_box')
         self.entity_path = os.path.join(self.entity_dir_path, 'model.sdf')
         self.entity = open(self.entity_path, 'r').read()

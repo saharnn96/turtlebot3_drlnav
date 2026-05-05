@@ -30,7 +30,7 @@ from turtlebot3_msgs.srv import DrlStep, Goal, RingGoal
 
 import rclpy
 from rclpy.node import Node
-from rclpy.qos import QoSProfile, qos_profile_sensor_data
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, qos_profile_sensor_data
 
 from . import reward as rw
 from ..common import utilities as util
@@ -88,7 +88,7 @@ class DRLEnvironment(Node):
         ** Initialise ROS publishers and subscribers
         ************************************************************"""
         qos = QoSProfile(depth=10)
-        qos_clock = QoSProfile(depth=1)
+        qos_clock = QoSProfile(depth=1, reliability=QoSReliabilityPolicy.BEST_EFFORT)
         # publishers
         self.cmd_vel_pub = self.create_publisher(Twist, self.velo_topic, qos)
         # subscribers

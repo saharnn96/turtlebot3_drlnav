@@ -1,0 +1,104 @@
+# Running the Project with Docker
+
+## 1. Build the Docker Image
+
+From the repository root:
+```
+docker build -t turtlebot3_drlnav .
+```
+
+## 2. Allow GUI Access
+```
+xhost +local:docker
+```
+
+## 3. Run the Container
+```
+docker run -it --gpus all --privileged --env NVIDIA_VISIBLE_DEVICES=all --env NVIDIA_DRIVER_CAPABILITIES=all --env DISPLAY=${DISPLAY} --env QT_X11_NO_MITSHM=1 --volume /tmp/.X11-unix:/tmp/.X11-unix -v $(pwd):/home/turtlebot3_drlnav --network host turtlebot3_drlnav
+```
+
+## 4. Build the Workspace (inside the container)
+```
+cd /home/turtlebot3_drlnav
+colcon build
+source install/setup.bash
+```
+
+## 5. Open Four Terminals
+
+Use `docker exec` to open additional terminals. In each new terminal tab on your host machine run:
+```
+docker exec -it <container_name> bash
+```
+
+To find your container name:
+```
+docker ps
+```
+
+In each new terminal, source the workspace:
+```
+source /home/turtlebot3_drlnav/install/setup.bash
+```
+
+## 6. Run the Training
+
+**Terminal 1** — Launch Gazebo simulation:
+```
+ros2 launch turtlebot3_gazebo turtlebot3_drl_stage4.launch.py
+```
+
+**Terminal 2** — Start goal manager:
+```
+ros2 run turtlebot3_drl gazebo_goals
+```
+
+**Terminal 3** — Start environment node:
+```
+ros2 run turtlebot3_drl environment
+```
+
+**Terminal 4** — Start training (choose one):
+```
+ros2 run turtlebot3_drl train_agent ddpg
+ros2 run turtlebot3_drl train_agent td3
+ros2 run turtlebot3_drl train_agent dqn
+```
+
+## Testing a Pre-trained Model
+
+Use the same 4-terminal setup but replace Terminal 4 with the test command.
+
+Launch stage 9 in Terminal 1 (the examples were trained on stage 9):
+```
+ros2 launch turtlebot3_gazebo turtlebot3_drl_stage9.launch.py
+```
+
+Then in Terminal 4, run one of the included example models:
+
+For TD3:
+```
+ros2 run turtlebot3_drl test_agent td3 'examples/td3_0_stage9' 7400
+```
+
+For DDPG:
+```
+ros2 run turtlebot3_drl test_agent ddpg 'examples/ddpg_0_stage9' 8000
+```
+
+To test your own trained model (substitute your model name and episode):
+```
+ros2 run turtlebot3_drl test_agent ddpg 'your_model_name_stageN' <episode>
+```
+
+> **Note:** The model path must end with the stage number (e.g. `_stage9`). The system reads the last character of the path to determine which stage the model was trained on.
+
+## Notes
+
+- Always launch the Gazebo simulation (Terminal 1) first before running any other node.
+- After any code change to the Python packages, rebuild before restarting:
+  ```
+  colcon build --packages-select turtlebot3_drl
+  source install/setup.bash
+  ```
+- Trained models are saved automatically to `src/turtlebot3_drl/model/`.
