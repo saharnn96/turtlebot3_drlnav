@@ -13,6 +13,9 @@ xhost +local:docker
 ```
 
 ## 3. Run the Container
+
+> **Important:** Run this command from **inside the repository directory** (e.g. `cd ~/turtlebot3_drlnav`). The `-v $(pwd)` flag mounts your current directory into the container — if you run it from your home directory, the wrong folder gets mounted and the build will fail.
+
 ```
 docker run -it --gpus all --privileged --env NVIDIA_VISIBLE_DEVICES=all --env NVIDIA_DRIVER_CAPABILITIES=all --env DISPLAY=${DISPLAY} --env QT_X11_NO_MITSHM=1 --volume /tmp/.X11-unix:/tmp/.X11-unix -v $(pwd):/home/turtlebot3_drlnav --network host turtlebot3_drlnav
 ```
@@ -23,6 +26,13 @@ cd /home/turtlebot3_drlnav
 colcon build
 source install/setup.bash
 ```
+
+> **If you see a CMakeCache error** like `The current CMakeCache.txt directory is different than the directory where CMakeCache.txt was created`, it means stale build artifacts exist from a previous failed build. Clean them and rebuild:
+> ```
+> rm -rf build/ install/ log/
+> colcon build
+> source install/setup.bash
+> ```
 
 ## 5. Open Four Terminals
 

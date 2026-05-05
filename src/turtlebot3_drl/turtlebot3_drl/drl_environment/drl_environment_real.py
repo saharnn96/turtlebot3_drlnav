@@ -131,14 +131,18 @@ class DRLEnvironment(Node):
         self.goal_angle = goal_angle
 
     def scan_callback(self, msg):
-        if len(msg.ranges) != REAL_N_SCAN_SAMPLES:
-            print(f"more or less scans than expected! check model.sdf, got: {len(msg.ranges)}, expected: {REAL_N_SCAN_SAMPLES}")
-        # normalize laser values
+        n_raw = len(msg.ranges)
+        # Downsample evenly from the full scan to REAL_N_SCAN_SAMPLES
+        indices = [int(i * n_raw / REAL_N_SCAN_SAMPLES) for i in range(REAL_N_SCAN_SAMPLES)]
         self.obstacle_distance = 1
-        for i in range(REAL_N_SCAN_SAMPLES):
-                self.scan_ranges[i] = numpy.clip(float(msg.ranges[i] - REAL_LIDAR_CORRECTION) / REAL_LIDAR_DISTANCE_CAP, 0, 1)
-                if self.scan_ranges[i] < self.obstacle_distance:
-                    self.obstacle_distance = self.scan_ranges[i]
+        for out_i, raw_i in enumerate(indices):
+            raw = msg.ranges[raw_i]
+            if math.isinf(raw) or math.isnan(raw):
+                raw = REAL_LIDAR_DISTANCE_CAP
+            self.scan_ranges[out_i] = numpy.clip(
+                float(raw - REAL_LIDAR_CORRECTION) / REAL_LIDAR_DISTANCE_CAP, 0, 1)
+            if self.scan_ranges[out_i] < self.obstacle_distance:
+                self.obstacle_distance = self.scan_ranges[out_i]
         self.obstacle_distance *= REAL_LIDAR_DISTANCE_CAP
 
     def stop_reset_robot(self, success):
