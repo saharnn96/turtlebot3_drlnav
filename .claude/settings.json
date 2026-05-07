@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /home/sahar/turtlebot3_drlnav/src/tb3_drl_deploy/tb3_drl_deploy)",
+      "Bash(mkdir -p /home/sahar/turtlebot3_drlnav/src/tb3_drl_deploy/resource)",
+      "Bash(mkdir -p /home/sahar/turtlebot3_drlnav/src/tb3_drl_deploy/launch)"
+    ]
+  }
+}

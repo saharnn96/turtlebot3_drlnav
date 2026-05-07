@@ -103,12 +103,39 @@ ros2 run turtlebot3_drl test_agent ddpg 'your_model_name_stageN' <episode>
 
 > **Note:** The model path must end with the stage number (e.g. `_stage9`). The system reads the last character of the path to determine which stage the model was trained on.
 
+## Testing the Deploy Node in Gazebo
+
+Use this to verify the lightweight Pi deploy node works correctly before putting it on the robot.
+Only **2 terminals** are needed — no goal manager, no environment node.
+
+**Terminal 1** — Launch Gazebo stage 9 (unpaused — required for the deploy node, which has no unpause call):
+```
+ros2 launch turtlebot3_gazebo turtlebot3_drl_stage9.launch.py pause:=false
+```
+
+**Terminal 2** — Run the deploy node:
+```
+ros2 launch tb3_drl_deploy deploy.launch.py \
+  model_path:=/home/turtlebot3_drlnav/src/turtlebot3_drl/model/examples/td3_0_stage9/actor_stage9_episode7400.pt \
+  goal_x:=1.5 \
+  goal_y:=0.0 \
+  lidar_correction:=0.0
+```
+
+> `lidar_correction:=0.0` is important here — Gazebo scans don't need the offset correction that the real robot does.
+
+The robot will start moving toward the goal immediately. To send a new goal while it is running, open a third terminal and run:
+```
+ros2 topic pub --once /goal_pose geometry_msgs/msg/Pose \
+  "{position: {x: 2.0, y: 1.0, z: 0.0}, orientation: {w: 1.0}}"
+```
+
 ## Notes
 
 - Always launch the Gazebo simulation (Terminal 1) first before running any other node.
 - After any code change to the Python packages, rebuild before restarting:
   ```
-  colcon build --packages-select turtlebot3_drl
+  colcon build --packages-select turtlebot3_drl tb3_drl_deploy
   source install/setup.bash
   ```
 - Trained models are saved automatically to `src/turtlebot3_drl/model/`.

@@ -69,21 +69,14 @@ WORKDIR /home/turtlebot3_drlnav
 
 RUN apt-get install -y nano tmux
 
-# Set up ~/.bashrc file
-RUN echo \
-    "\n"\
-    "source /opt/ros/humble/setup.bash\n"\
-    "# ROS2 domain id for network communication, machines with the same ID will receive each others' messages\n"\
-    "export ROS_DOMAIN_ID=1\n"\
-    "export DRLNAV_BASE_PATH='/home/turtlebot3_drlnav'\n"\
-    "# Source the workspace\n"\
-    "source \$DRLNAV_BASE_PATH/install/setup.bash\n"\
-    "# Allow gazebo to find our turtlebot3 models\n"\
-    "export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:\$DRLNAV_BASE_PATH/src/turtlebot3_simulations/turtlebot3_gazebo/models\n"\
-    "# Select which turtlebot model we will be using (default: burger, waffle, waffle_pi)\n"\
-    "export TURTLEBOT3_MODEL=burger\n"\
-    "# Allow Gazebo to find the plugin for moving the obstacles\n"\
-    "export GAZEBO_PLUGIN_PATH=$GAZEBO_PLUGIN_PATH:\$DRLNAV_BASE_PATH/src/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_drl_world/obstacle_plugin/lib\n"\
-    >> ~/.bashrc
+# Set environment variables for all processes (not just interactive shells)
+ENV DRLNAV_BASE_PATH=/home/turtlebot3_drlnav
+ENV ROS_DOMAIN_ID=1
+ENV TURTLEBOT3_MODEL=burger
+ENV GAZEBO_MODEL_PATH=/home/turtlebot3_drlnav/src/turtlebot3_simulations/turtlebot3_gazebo/models
+ENV GAZEBO_PLUGIN_PATH=/home/turtlebot3_drlnav/src/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_drl_world/obstacle_plugin/lib
+
+# Set up ~/.bashrc for interactive terminals (source ROS2 and workspace)
+RUN printf '\nsource /opt/ros/humble/setup.bash\nsource $DRLNAV_BASE_PATH/install/setup.bash\n' >> ~/.bashrc
 
 CMD ["bash"]
